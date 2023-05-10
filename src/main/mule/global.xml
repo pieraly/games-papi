@@ -9,7 +9,7 @@ http://www.mulesoft.org/schema/mule/os http://www.mulesoft.org/schema/mule/os/cu
 	<configuration-properties doc:name="Configuration properties" doc:id="281d79ec-a4ca-47ac-b947-ac43663d1826" file="${env}.yaml" />
 	<global-property doc:name="Global Property" doc:id="61adc477-6693-4b14-bc2b-b0fb5c3c71f4" name="env" value="prod" />
 	<http:listener-config name="HTTP_Listener_config" doc:name="HTTP Listener config" doc:id="a8f46608-1c33-4954-b28a-d1dafb73d85d" >
-		<http:listener-connection host="${listener.host}" port="${listener.port}" />
+		<http:listener-connection host="${http.host}" port="${http.port}" />
 	</http:listener-config>
 	<http:request-config name="RequestRawgio" doc:name="HTTP Request configuration" doc:id="6c0079a2-3574-40b1-9b17-112f763879f3" basePath="/api">
 		<http:request-connection host="${raw.host}" port="${raw.port}" />
