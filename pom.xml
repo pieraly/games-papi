@@ -40,9 +40,6 @@
 						<workerType>MICRO</workerType>
 						<objectStoreV2>true</objectStoreV2>
 					</cloudHubDeployment>
-				<extensions>true</extensions>
-				<configuration>
-					<classifier>mule-application</classifier>
 				</configuration>
 			</plugin>
 		</plugins>
