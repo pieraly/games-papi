@@ -1,0 +1,171 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+	<flow name="Get-Implementation-ProcFlow" doc:id="7a751414-5e36-40a4-b1cd-517bffb835cb" >
+		<logger level="INFO" doc:name="Begin flow" doc:id="98673c02-822b-480a-9e1a-eaa5468c3b7b" message="Begin flow"/>
+		<set-variable value="#[attributes.queryParams.best_rating]" doc:name="best" doc:id="34f54d68-ffeb-47c2-a692-e7161a9a8aaa" variableName="best" />
+		<set-variable value="#[attributes.queryParams.worst_rating]" doc:name="worst" doc:id="66dafc5e-dd14-4fb4-84ec-eab25b120dd5" variableName="worst" />
+		<http:request method="GET" doc:name="Request Sys MongoDB" doc:id="83e45c97-de8e-4b8f-88df-e9b1bb2f86fe" config-ref="RequestMongoDB" path="/games" responseTimeout="100000">
+			<http:headers><![CDATA[#[output application/java
+---
+{
+	"best" : vars.best,
+	"worst" : vars.worst
+}]]]></http:headers>
+			<http:query-params><![CDATA[#[output application/java 
+---
+{
+	("date" : attributes.queryParams.date) if (attributes.queryParams.date != null),
+	("store" : attributes.queryParams.stores) if (attributes.queryParams.stores != null),
+	("genre" : attributes.queryParams.genre) if (attributes.queryParams.genre != null),
+	("platform" : attributes.queryParams.platform) if (attributes.queryParams.platform != null),
+	("best_rating" : attributes.queryParams.best_rating) if (attributes.queryParams.best_rating != null),
+	("worst_rating" : attributes.queryParams.worst_rating) if (attributes.queryParams.worst_rating != null)
+}]]]></http:query-params>
+		</http:request>
+		<choice doc:name="Choice In case we need the ratings" doc:id="2113da87-384d-450b-8183-999e71ed30dd">
+			<when expression="#[vars.best != null and vars.worst != null]">
+				<flow-ref doc:name="Flow Reference to Ratings Flow" doc:id="9893cf42-3c3b-4992-893d-9776223fdea1" name="Get-ratings" />
+			</when>
+			<otherwise>
+				<ee:transform doc:name="Show Payload" doc:id="4e586bc3-7dce-4c9b-be51-434207b1570e">
+					<ee:message>
+						<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+			</otherwise>
+		</choice>
+		<logger level="INFO" doc:name="End Flow Proc" doc:id="625fab50-f591-4c3b-a0ac-813b7807e342" message="end flow proc" />
+	</flow>
+	<flow name="POST-Implementation-ProcFlow1" doc:id="07be8569-35c9-4a6d-84a4-0390acfc41bc" >
+		<logger level="INFO" doc:name="Begin flow" doc:id="b02895c2-37b0-489b-9231-c80949b1760a" />
+		<set-variable value="#[attributes.queryParams.unique]" doc:name="unique" doc:id="3b817882-b3e7-4607-ad15-749d08413196" variableName="unique"/>
+		<set-variable value="#[attributes.queryParams.page as Number default 1]" doc:name="page" doc:id="77308eaf-5fe7-473f-b44d-22c90bf14fb9" variableName="page"/>
+		<choice doc:name="Choice for pages" doc:id="7ce410e1-0c8f-448f-bcd6-2a171ebdb71a" >
+			<when expression="#[vars.page &gt; 1 and vars.unique != null]">
+				<http:request method="GET" doc:name="Request to Sys-Rawg.io" doc:id="42b6222c-a6eb-44b9-9d5a-69526c29ded7" config-ref="RequestRawgio" path="/videosgames">
+			<http:query-params><![CDATA[#[output application/java
+---
+{
+	"page" : vars.page
+}]]]></http:query-params>
+		</http:request>
+				<ee:transform doc:name="Transform payload to right format" doc:id="c3613b66-afac-46a3-8a34-84182a97450f" >
+					<ee:message >
+						<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+ payload.results map ((item, index) -> {
+		"_id": item.id,
+		name: item.name,
+		date_released: item.released,
+		rating: item.rating,
+		best_rating: item.rating_top,
+		ratings: item.ratings map((order, index) -> {
+    			title: order.title,
+    			precent: order.percent
+
+		}),
+		platforms: item.parent_platforms.platform.name,
+		genres: item.genres.name,
+		stores: item.stores.store.name
+		
+		})
+
+]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+				<foreach doc:name="For Each" doc:id="f3b5139b-7d00-441a-b289-8a587dee301b" >
+					<logger level="INFO" doc:name="Access to system" doc:id="0ddaf798-196a-4f62-966f-e873a8ce7319" />
+					<http:request method="POST" doc:name="Request to Sys-mongoDB" doc:id="26236347-74fe-4770-802b-85693f045bda" config-ref="RequestMongoDB" path="/games" />
+				</foreach>
+			
+</when>
+			<otherwise>
+				<foreach doc:name="For Each" doc:id="26ec5fca-adf9-4e90-b541-ff3477877a53" collection="#[1 to vars.page]">
+					<flow-ref doc:name="Flow Reference" doc:id="fc862443-f30a-4cfa-b36f-97f54156f9c2" name="Implementation-ProcFlow"/>
+		</foreach>
+			</otherwise>
+		
+
+</choice>
+		<ee:transform doc:name="Succes Operation" doc:id="a65b413c-e131-44b8-aa43-7d6c16dbf052" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json		
+---
+{
+	"message" : "Opération réussie !"
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<logger level="INFO" doc:name="End flow" doc:id="1320e945-8086-4539-8ec4-7bf7184666a0" message="End Post Flow"/>
+	</flow>
+	<flow name="Get-ratings" doc:id="2cdcd621-3274-4ef3-804b-8b13bfef251a" >
+		<logger level="INFO" doc:name="Begin Rating" doc:id="313dc800-8ac7-4243-abda-2230a4bdffbe" message="#[payload]"/>
+		<ee:transform doc:name="Find good or bad games (ratings filter)" doc:id="3605ca78-0bcf-415d-a480-387339cc5e0e">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+payload filter ($.ratings.precent[0] > vars.Best and $.ratings.precent[3] < vars.Worst ) map((item,index) ->
+{
+    "id":item.id,
+    "name":item.name,
+    "date_released":item.date_released,
+    platforms: item.platforms,
+	genres: item.genres,
+	stores: item.stores
+})
+]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	
+</flow>
+	<flow name="Implementation-ProcFlow" doc:id="a1171cbc-2c81-499a-8ba8-58bfed6be687" >
+		<http:request method="GET" doc:name="Request to Sys-Rawg.io" doc:id="19336ad8-d8e6-4eca-ae47-f7c09fbcd136" config-ref="RequestRawgio" path="/videosgames">
+			<http:query-params><![CDATA[#[output application/java
+---
+{
+	"page" : vars.counter
+}]]]></http:query-params>
+		</http:request>
+		<logger level="INFO" doc:name="After Request" doc:id="3f241275-048c-457e-a01a-b2294a69c1fb" message="#[payload]" />
+		<ee:transform doc:name="Transform payload to right format" doc:id="12f7505a-b973-4b81-bd34-fe72b04e0ccd">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+ payload.results map ((item, index) -> {
+		"_id": item.id,
+		name: item.name,
+		date_released: item.released,
+		rating: item.rating,
+		best_rating: item.rating_top,
+		ratings: item.ratings map((order, index) -> {
+    			title: order.title,
+    			precent: order.percent
+
+		}),
+		platforms: item.parent_platforms.platform.name,
+		genres: item.genres.name,
+		stores: item.stores.store.name
+		
+		})
+
+]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<foreach doc:name="For Each" doc:id="24196930-3637-4d4c-8dc0-23e3fefc0410">
+			<logger level="INFO" doc:name="Access to system" doc:id="038126bd-d4dc-4f6f-81a6-e5b666f211ca" />
+			<http:request method="POST" doc:name="Request to Sys-mongoDB" doc:id="74017b98-6efb-4452-b8ae-0e19d97cc98c" config-ref="RequestMongoDB" path="/games" />
+		</foreach>
+	</flow>
+</mule>

@@ -1,0 +1,52 @@
+#%RAML 1.0
+title: Video_games-proc
+version: v1
+description: The goal is to format the game to the right format, or to get the list at the right format, the process API si the one who interact with and shape data within a single system or across systems.
+types:
+  games: !include Datatypes/dataType.raml
+
+/proc:
+  description: List All games 
+  displayName: List Games
+  get:
+    queryParameters:
+      genre:
+        type: string
+        required: false
+      platform:
+        type: string
+        required: false
+      date:
+        type: date-only
+        required: false
+      stores:
+        type: string
+        required: false
+      best_rating:
+        type: number
+        required: false
+      worst_rating:
+        type: number
+        required: false
+    description: List all games
+    responses:
+      200:
+        body:
+          application/json:
+            example:
+              !include Examples/example.raml
+      401:
+        description: Unauthorized or invalid client application
+         credential
+  post:
+    description: Add games to the mongoDB with right format
+    responses:
+      201:
+        body:
+          application/json:
+            example:
+              !include Examples/example.raml
+      401:
+        description: Unauthorized or invalid client application
+         credential
+
