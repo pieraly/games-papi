@@ -10,10 +10,4 @@ request1:
   host: "localhost"
   port: "8084"
   
-ListDate:
-  host: "localhost"
-  port: "8089"
-  
-ListRat:
-  host: "localhost"
-  port: "8090"
+

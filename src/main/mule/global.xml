@@ -7,23 +7,14 @@ http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/htt
 http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
 http://www.mulesoft.org/schema/mule/os http://www.mulesoft.org/schema/mule/os/current/mule-os.xsd">
 	<configuration-properties doc:name="Configuration properties" doc:id="281d79ec-a4ca-47ac-b947-ac43663d1826" file="${env}.yaml" />
-	<global-property doc:name="Global Property" doc:id="61adc477-6693-4b14-bc2b-b0fb5c3c71f4" name="env" value="local" />
+	<global-property doc:name="Global Property" doc:id="61adc477-6693-4b14-bc2b-b0fb5c3c71f4" name="env" value="prod" />
 	<http:listener-config name="HTTP_Listener_config" doc:name="HTTP Listener config" doc:id="a8f46608-1c33-4954-b28a-d1dafb73d85d" >
 		<http:listener-connection host="${listener.host}" port="${listener.port}" />
 	</http:listener-config>
 	<http:request-config name="RequestRawgio" doc:name="HTTP Request configuration" doc:id="6c0079a2-3574-40b1-9b17-112f763879f3" basePath="/api">
-		<http:request-connection host="${request.host}" port="${request.port}" />
+		<http:request-connection host="${raw.host}" port="${raw.port}" />
 	</http:request-config>
 	<http:request-config name="RequestMongoDB" doc:name="HTTP Request configuration" doc:id="327f132f-e337-49fa-bc73-627bbc0503e4" basePath="/api" >
-		<http:request-connection host="${request1.host}" port="${request1.port}" />
+		<http:request-connection host="${mongo.host}" port="${mongo.port}" />
 	</http:request-config>
-	<http:listener-config name="Listener_date" doc:name="HTTP Listener config" doc:id="8345cb88-42d8-45c2-b158-1c5bbacc2f48" >
-		<http:listener-connection host="${ListDate.host}" port="${ListDate.port}" />
-	</http:listener-config>
-	<http:listener-config name="Listene_Ratings" doc:name="HTTP Listener config" doc:id="7039bb14-5ad4-4317-8a66-a9e08ba6fb49" >
-		<http:listener-connection host="${ListRat.host}" port="${ListRat.port}" />
-	</http:listener-config>
-	<ee:object-store-caching-strategy name="Caching_Strategy" doc:name="Caching Strategy" doc:id="b196a3fe-64af-4429-9d30-d9bb2f7f9d33">
-		<os:private-object-store alias="Cache" maxEntries="1000" entryTtl="100" expirationInterval="5" />
-	</ee:object-store-caching-strategy>
 </mule>
